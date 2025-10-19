@@ -1,0 +1,7 @@
+target,port,open,banner,time_ms
+192.168.1.10,20,false,n/a,11.00
+192.168.1.10,21,true,"FTP server (vsftpd 3.0.3)",12.00
+192.168.1.10,22,true,"SSH-2.0-OpenSSH_8.2p1",15.00
+192.168.1.10,23,false,n/a,9.00
+192.168.1.10,24,false,n/a,10.00
+192.168.1.10,25,false,n/a,11.00
