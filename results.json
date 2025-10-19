@@ -1,0 +1,11 @@
+ {
+  "target": "192.168.1.10",
+  "results": [
+    {"port": 20, "open": false, "banner": "n/a", "time_ms": 11.00},
+    {"port": 21, "open": true, "banner": "FTP server (vsftpd 3.0.3)", "time_ms": 12.00},
+    {"port": 22, "open": true, "banner": "SSH-2.0-OpenSSH_8.2p1", "time_ms": 15.00},
+    {"port": 23, "open": false, "banner": "n/a", "time_ms": 9.00},
+    {"port": 24, "open": false, "banner": "n/a", "time_ms": 10.00},
+    {"port": 25, "open": false, "banner": "n/a", "time_ms": 11.00}
+  ]
+ }
