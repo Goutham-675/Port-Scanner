@@ -1,0 +1,177 @@
+/*
+ SimulatedPortScanner.java
+ Educational / simulated port analyser (no network activity)
+ Author: R. Goutham
+ Compile: javac SimulatedPortScanner.java
+ Run example:
+   java SimulatedPortScanner 192.168.1.10 20-25 --csv results.csv --json results.json --verbose
+
+ NOTES:
+ - This is a simulation only. It does NOT open sockets or perform real network scans.
+ - Useful for demos, reports, and showing scanner-like output formats.
+*/
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Random;
+
+public class SimulatedPortScanner {
+
+    static class Result {
+        int port;
+        boolean open;
+        String banner;
+        double timeMs;
+        Result(int p, boolean o, String b, double t) { port = p; open = o; banner = b; timeMs = t; }
+    }
+
+    private static final int MAX_PORT = 65535;
+
+    private static boolean parseRange(String s, int[] out) {
+        try {
+            if (s.contains("-")) {
+                String[] parts = s.split("-");
+                out[0] = Integer.parseInt(parts[0].trim());
+                out[1] = Integer.parseInt(parts[1].trim());
+            } else {
+                out[0] = out[1] = Integer.parseInt(s.trim());
+            }
+            if (out[0] < 1) out[0] = 1;
+            if (out[1] > MAX_PORT) out[1] = MAX_PORT;
+            return out[1] >= out[0];
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // Deterministic-ish "open" decision: hash-based so results are repeatable for same target+port
+    private static boolean simulatedOpen(String target, int port) {
+        long h = 1469598103934665603L;
+        for (char c : target.toCharArray()) h = (h ^ c) * 1099511628211L;
+        h ^= port;
+        h *= 1099511628211L;
+        return (Math.abs(h) % 100) < 18; // ~18% open
+    }
+
+    private static String bannerFor(int port) {
+        switch (port) {
+            case 22:  return "SSH-2.0-OpenSSH_8.2p1";
+            case 21:  return "FTP server (vsftpd 3.0.3)";
+            case 23:  return "TelnetD";
+            case 25:  return "Postfix smtpd";
+            case 53:  return "dnsmasq";
+            case 80:  return "HTTP/1.1 Apache/2.4";
+            case 443: return "HTTPS (nginx)";
+            case 3306:return "MySQL server";
+            case 3389:return "RDP service";
+            default:  return "unknown";
+        }
+    }
+
+    private static void writeCsv(String filename, String target, ArrayList<Result> results) throws IOException {
+        try (FileWriter fw = new FileWriter(filename)) {
+            fw.write("target,port,open,banner,time_ms\n");
+            for (Result r : results) {
+                fw.write(String.format("%s,%d,%b,\"%s\",%.2f\n",
+                        target, r.port, r.open, r.banner.replace("\"","'"), r.timeMs));
+            }
+        }
+    }
+
+    private static void writeJson(String filename, String target, ArrayList<Result> results) throws IOException {
+        try (FileWriter fw = new FileWriter(filename)) {
+            fw.write("{\n  \"target\": \"" + target + "\",\n  \"results\": [\n");
+            for (int i = 0; i < results.size(); ++i) {
+                Result r = results.get(i);
+                fw.write("    {\n");
+                fw.write("      \"port\": " + r.port + ",\n");
+                fw.write("      \"open\": " + r.open + ",\n");
+                fw.write("      \"banner\": \"" + r.banner.replace("\"","'") + "\",\n");
+                fw.write("      \"time_ms\": " + String.format("%.2f", r.timeMs) + "\n");
+                fw.write("    }" + (i + 1 < results.size() ? "," : "") + "\n");
+            }
+            fw.write("  ]\n}\n");
+        }
+    }
+
+    public static void main(String[] args) {
+        if (args.length < 2) {
+            System.out.println("Usage: java SimulatedPortScanner <target> <port|start-end> [--csv file] [--json file] [--verbose]");
+            System.out.println("Example: java SimulatedPortScanner 192.168.1.10 20-80 --csv out.csv --json out.json --verbose");
+            return;
+        }
+
+        String target = args[0];
+        String rangeArg = args[1];
+        String csvFile = null;
+        String jsonFile = null;
+        boolean verbose = false;
+
+        for (int i = 2; i < args.length; ++i) {
+            if (args[i].equalsIgnoreCase("--verbose")) verbose = true;
+            else if (args[i].equalsIgnoreCase("--csv") && i + 1 < args.length) { csvFile = args[++i]; }
+            else if (args[i].equalsIgnoreCase("--json") && i + 1 < args.length) { jsonFile = args[++i]; }
+        }
+
+        int[] range = new int[2];
+        if (!parseRange(rangeArg, range)) {
+            System.err.println("Invalid port or range: " + rangeArg);
+            return;
+        }
+
+        int start = range[0], end = range[1];
+        System.out.printf("Simulated scan of %s (ports %d-%d)%n", target, start, end);
+        System.out.println("Note: Simulation only — no network traffic is generated.\n");
+
+        ArrayList<Result> results = new ArrayList<>();
+        Random sleepRand = new Random(target.hashCode() ^ start ^ end);
+        int openCount = 0;
+        long t0 = System.currentTimeMillis();
+
+        for (int p = start; p <= end; ++p) {
+            // small simulated delay to make output realistic
+            int fakeMs = 8 + sleepRand.nextInt(60); // 8..67 ms
+            try { Thread.sleep(Math.min(fakeMs, 200)); } catch (InterruptedException ignored) {}
+
+            boolean open = simulatedOpen(target, p);
+            double timeMs = fakeMs + (sleepRand.nextInt(10));
+            String banner = open ? bannerFor(p) : "n/a";
+
+            results.add(new Result(p, open, banner, timeMs));
+            if (open) {
+                openCount++;
+                System.out.printf("Port %5d: OPEN   (banner: %s) [%.0f ms]%n", p, banner, timeMs);
+            } else if (verbose) {
+                System.out.printf("Port %5d: CLOSED [%.0f ms]%n", p, timeMs);
+            } else {
+                // compact progress dot
+                System.out.print(".");
+                if ((p - start) % 60 == 59) System.out.println();
+            }
+        }
+
+        double elapsed = (System.currentTimeMillis() - t0) / 1000.0;
+        if (!verbose) System.out.println();
+        System.out.printf("%nScan finished: %d scanned, %d open, time: %.2fs%n", (end - start + 1), openCount, elapsed);
+
+        if (csvFile != null) {
+            try {
+                writeCsv(csvFile, target, results);
+                System.out.println("CSV saved to: " + csvFile);
+            } catch (IOException e) {
+                System.out.println("Failed to write CSV: " + e.getMessage());
+            }
+        }
+        if (jsonFile != null) {
+            try {
+                writeJson(jsonFile, target, results);
+                System.out.println("JSON saved to: " + jsonFile);
+            } catch (IOException e) {
+                System.out.println("Failed to write JSON: " + e.getMessage());
+            }
+        }
+
+        System.out.println("\nEthical note: This is a simulation. Only scan systems you own or have explicit permission to test.");
+    }
+}
