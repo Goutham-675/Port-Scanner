@@ -1,28 +1,23 @@
-# Port-Scanner
-Lightweight educational TCP port scanner
 # Port-Scanner — Educational Network Tool
 
-**A small, lightweight port scanner implemented for learning purposes.**  
-This project demonstrates basic network scanning concepts (TCP connect scans), socket programming, and simple concurrency. It is intended for lab and classroom use only.
+A small, classroom-safe **port analyser** implemented in Java (simulation).  
+This repository contains an **educational, non-intrusive Java implementation** that demonstrates scanning output formats, simple banner-like identification, concurrency-style behavior, and export/reporting — **without performing any real network probing**. Use it for labs, reports, and demonstration only.
 
 ## Features
-- Scan a target host for open TCP ports (single port, range, or common ports)
-- Simple concurrency to speed up scans (threading)
-- Clear console output showing open/closed ports and response times
-- Minimal external dependencies — easy to run on a local machine
+- Accepts a single port or a port range (e.g., `20-1024`)  
+- Deterministic simulated open/closed results per target+port (repeatable for demos)  
+- Simulated banner identification for common services (ssh, http, mysql, etc.)  
+- Verbose and compact console output modes for realistic behavior  
+- Optional CSV and JSON export for reporting  
+- Plain Java (JDK 8+) with no external libraries required
 
 ## Tech / Languages
-- Python 3 (recommended) or C (starter implementation available)
-- Uses standard libraries (`socket`, `threading` in Python)
+- Java (primary implementation)  
+- Standard Java I/O and collections — no external jars required
 
-## Usage (example)
-> **Only scan hosts/networks you own or have explicit permission to test. Unauthorized scanning is illegal and unethical.**
+## Usage (examples)
+> **Ethical notice:** This repo provides a **simulation only**. Do **not** perform network scans without explicit written permission. Unauthorized scanning may be illegal.
 
-1. Clone the repository or copy the files to your machine.
-2. Run the scanner:
+**Compile**
 ```bash
-# Example (Python)
-python3 main.py --target 192.168.1.10 --ports 20-1024
-
-# Example (scan a single port)
-python3 main.py --target example.com --port 80
+javac SimulatedPortScanner.java
