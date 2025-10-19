@@ -1,0 +1,15 @@
+Simulated scan of 192.168.1.10 (ports 20-25)
+Note: Simulation only — no network traffic generated.
+
+Port    20: CLOSED
+Port    21: OPEN    (banner: FTP server (vsftpd 3.0.3)) [12 ms]
+Port    22: OPEN    (banner: SSH-2.0-OpenSSH_8.2p1) [15 ms]
+Port    23: CLOSED
+Port    24: CLOSED
+Port    25: CLOSED
+
+Scan finished: 6 scanned, 2 open, time: 0.18s
+CSV saved to: results.csv
+JSON saved to: results.json
+
+Ethical note: This is a simulation. Only scan systems you own or have explicit permission to test.
